@@ -1,0 +1,23 @@
+[project]
+name = "hash-balance"
+version = "2.2.0"
+description = "Hash Balance — chi-squared smoke test for hash bucket uniformity"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+hash-balance = "hash_balance.report:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
