@@ -1,6 +1,6 @@
 # Hash Balance
 
-**Hash Balance** is a fast distribution test tool for hash output uniformity. It uses one
+**Hash Balance** is a fast distribution test tool for hash output uniformity. It uses a
 chi-squared goodness-of-fit test to spot bucket bias in sharding, hash tables,
 and custom reducers.
 
