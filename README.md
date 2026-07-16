@@ -1,8 +1,12 @@
 # Hash Balance
 
-**Hash Balance** is a fast distribution test tool for hash output uniformity. It uses a
-chi-squared goodness-of-fit test to spot bucket bias in sharding, hash tables,
-and custom reducers.
+Hash Balance is a testing tool I'm developing to detect distribution bias in hash
+function outputs. Point it at any `bytes -> int` callable, configure sample sizes,
+bucket counts, and input patterns, and it simulates real sharding scenarios to see
+whether outputs land evenly across buckets.
+
+Under the hood, it runs a chi-squared goodness-of-fit test to spot bucket bias in
+sharding, hash tables, and custom reducers.
 
 > **Disclaimer:** This is not a security test. Hash Balance is intended for research and education purposes only.
 <img width="1437" height="900" alt="image" src="https://github.com/user-attachments/assets/c2659346-e4df-45b9-8ef6-2e4d97a8c4ca" />
