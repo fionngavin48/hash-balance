@@ -71,8 +71,9 @@ def goodbye_body() -> list[str]:
 class ScreenSection:
     """A titled block of lines rendered together on one screen."""
 
-    title: str
+    title: str | None
     body: list[str]
+    bold_lines: int = 0
 
 
 class TerminalUI:
@@ -163,11 +164,24 @@ class TerminalUI:
             if divider:
                 print("─" * max(len(title), 40))
 
-    def _print_section_body(self, body: list[str]) -> None:
+    def _print_active_mode_line(self, mode_name: str) -> None:
+        """Print the active mode banner with an unbold mode name."""
+        if not self.is_tty:
+            print(f"> ACTIVE MODE: {mode_name} <")
+            return
+
+        print(
+            self._style("> ACTIVE MODE: ", BOLD, BRIGHT_RED)
+            + self._style(mode_name, RED_FG)
+            + self._style(" <", BOLD, BRIGHT_RED)
+        )
+
+    def _print_section_body(self, body: list[str], *, bold_lines: int = 0) -> None:
         """Print section body lines."""
-        for line in body:
+        for index, line in enumerate(body):
             if self.is_tty:
-                print(self._style(line, RED_FG))
+                styles = (BOLD, BRIGHT_RED) if index < bold_lines else (RED_FG,)
+                print(self._style(line, *styles))
             else:
                 print(line)
 
@@ -184,17 +198,23 @@ class TerminalUI:
         sections: list[ScreenSection],
         *,
         status: str | None = None,
+        active_mode_name: str | None = None,
     ) -> None:
         """Draw the fixed header plus one or more titled body sections."""
         self.clear()
         self._print_header()
         print()
 
+        if active_mode_name is not None:
+            self._print_active_mode_line(active_mode_name)
+            print()
+
         for index, section in enumerate(sections):
             if index > 0:
                 print()
-            self._print_section_title(section.title)
-            self._print_section_body(section.body)
+            if section.title is not None:
+                self._print_section_title(section.title)
+            self._print_section_body(section.body, bold_lines=section.bold_lines)
 
         if status:
             print()

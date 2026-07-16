@@ -1,6 +1,16 @@
 """Tests for terminal loading animation helpers."""
 
-from hash_balance.terminal_ui import ASCII_ART, TerminalUI, goodbye_body, loading_message, skull_lines
+from hash_balance.terminal_ui import (
+    ASCII_ART,
+    BOLD,
+    BRIGHT_RED,
+    RED_FG,
+    RESET,
+    TerminalUI,
+    goodbye_body,
+    loading_message,
+    skull_lines,
+)
 
 
 def test_loading_message_cycles_dots() -> None:
@@ -36,6 +46,27 @@ def test_ascii_art_right_border_is_aligned() -> None:
 
     assert len({len(line) for line in lines}) == 1
     assert all(line[-1] == "█" for line in lines)
+
+
+def test_active_mode_line_keeps_mode_name_unbold_in_tty() -> None:
+    """Active mode banner should bold the wrapper but not the mode name."""
+    ui = TerminalUI.__new__(TerminalUI)
+    ui.is_tty = True
+
+    import io
+    from contextlib import redirect_stdout
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        ui._print_active_mode_line("HASH BALANCE")
+
+    output = buffer.getvalue()
+    assert "> ACTIVE MODE: " in output
+    assert "HASH BALANCE" in output
+    assert " <" in output
+    assert output.index("HASH BALANCE") > output.index("> ACTIVE MODE: ")
+    assert f"{RED_FG}HASH BALANCE{RESET}" in output
+    assert f"{BOLD}{BRIGHT_RED}> ACTIVE MODE: {RESET}" in output
 
 
 def test_version_line_is_bold_red_and_indented() -> None:

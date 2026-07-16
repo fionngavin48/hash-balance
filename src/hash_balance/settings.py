@@ -2,15 +2,17 @@
 
 from dataclasses import dataclass, field
 
+from hash_balance.constants import auto_threshold
 from hash_balance.hash_registry import DEFAULT_HASH_TARGETS, HashTarget
 from hash_balance.inputs import INPUT_MODE_LABELS, InputMode
-from hash_balance.constants import auto_threshold
+from hash_balance.modes import AnalysisMode
 
 
 @dataclass
 class AnalysisSettings:
     """Runtime settings for chi-squared hash uniformity analysis."""
 
+    mode: AnalysisMode = "hash_balance"
     sample_size: int = 10_000
     bucket_count: int = 256
     threshold: float = field(default_factory=lambda: auto_threshold(256))

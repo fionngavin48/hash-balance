@@ -9,6 +9,12 @@ from hash_balance.hash_registry import (
     resolve_hash,
 )
 from hash_balance.inputs import cycle_input_modes
+from hash_balance.modes import (
+    ANALYSIS_MODES,
+    ANALYSIS_MODE_NAMES,
+    active_mode_name,
+    mode_selection_lines,
+)
 from hash_balance.report import format_analysis
 from hash_balance.settings import AnalysisSettings, DEFAULT_SETTINGS
 from hash_balance.terminal_ui import (
@@ -87,6 +93,7 @@ def _control_panel_options() -> list[str]:
     return [
         "  a) add/remove targets",
         "  c) change parameters",
+        "  m) change mode",
         "  r) run",
         "  q) quit",
     ]
@@ -108,7 +115,11 @@ def _render_control_panel(
     status: str | None = None,
 ) -> None:
     """Render the split parameters and control panel layout."""
-    ui.render_sections(_control_panel_sections(settings), status=status)
+    ui.render_sections(
+        _control_panel_sections(settings),
+        status=status,
+        active_mode_name=active_mode_name(settings.mode),
+    )
 
 
 def _target_list_body(settings: AnalysisSettings) -> list[str]:
@@ -129,11 +140,11 @@ def _target_management_body(settings: AnalysisSettings) -> list[str]:
     body.extend(
         [
             "",
-            "  a) Add target",
-            "  d) Remove target",
-            "  t) Toggle enabled",
-            "  e) Reset to defaults",
-            "  b) Back",
+            "  a) add target",
+            "  d) remove target",
+            "  t) toggle enabled",
+            "  e) reset to defaults",
+            "  b) back",
         ]
     )
     return body
@@ -142,7 +153,14 @@ def _target_management_body(settings: AnalysisSettings) -> list[str]:
 def _parameter_control_body(settings: AnalysisSettings) -> list[str]:
     """Build the parameter control submenu."""
     body = list(settings.summary_lines())
-    body.extend(["", *_parameter_options(), "", "  b) Back"])
+    body.extend(["", *_parameter_options(), "", "  b) back"])
+    return body
+
+
+def _mode_control_body(settings: AnalysisSettings) -> list[str]:
+    """Build the mode selection submenu."""
+    body = list(mode_selection_lines(settings.mode))
+    body.extend(["", "  b) back"])
     return body
 
 
@@ -262,6 +280,46 @@ def _manage_targets(ui: TerminalUI, settings: AnalysisSettings) -> None:
             )
 
 
+def _manage_modes(ui: TerminalUI, settings: AnalysisSettings) -> None:
+    """Run the mode selection submenu."""
+    while True:
+        ui.render(_mode_control_body(settings), title="Change mode")
+        choice = ui.prompt("Action").strip().lower()
+
+        if choice in {"b", "back"}:
+            return
+
+        try:
+            index = int(choice)
+        except ValueError:
+            ui.render(
+                _mode_control_body(settings),
+                title="Change mode",
+                status=f"! Unknown action. Try 1-{len(ANALYSIS_MODES)} or b.",
+            )
+            continue
+
+        if not 1 <= index <= len(ANALYSIS_MODES):
+            ui.render(
+                _mode_control_body(settings),
+                title="Change mode",
+                status=f"! Choose a number between 1 and {len(ANALYSIS_MODES)}.",
+            )
+            continue
+
+        selected = ANALYSIS_MODES[index - 1]
+        if selected == settings.mode:
+            return
+
+        settings.mode = selected
+        ui.render(
+            _mode_control_body(settings),
+            title="Change mode",
+            status=f"Active mode set to {ANALYSIS_MODE_NAMES[selected]}.",
+        )
+        ui.pause()
+
+
 def _manage_parameters(ui: TerminalUI, settings: AnalysisSettings) -> None:
     """Run the parameter control submenu."""
     while True:
@@ -351,6 +409,7 @@ def run_interactive(initial: AnalysisSettings | None = None) -> None:
 
     with ui.loading(min_duration=LAUNCH_LOADING_SECONDS, show_after=0):
         settings = AnalysisSettings(
+            mode=base.mode,
             sample_size=base.sample_size,
             bucket_count=base.bucket_count,
             threshold=base.threshold,
@@ -373,6 +432,8 @@ def run_interactive(initial: AnalysisSettings | None = None) -> None:
             _manage_targets(ui, settings)
         elif choice == "c":
             _manage_parameters(ui, settings)
+        elif choice == "m":
+            _manage_modes(ui, settings)
         elif choice in {"r", "run"}:
             with ui.loading(label="Running"):
                 lines = format_analysis(settings)
@@ -389,7 +450,7 @@ def run_interactive(initial: AnalysisSettings | None = None) -> None:
             _render_control_panel(
                 ui,
                 settings,
-                status="! Unknown action. Try a, c, r, or q.",
+                status="! Unknown action. Try a, c, m, r, or q.",
             )
 
 
