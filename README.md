@@ -5,6 +5,8 @@ chi-squared goodness-of-fit test to spot bucket bias in sharding, hash tables,
 and custom reducers.
 
 > **Disclaimer:** This is not a security test. Hash Balance is intended for research and education purposes only.
+<img width="1437" height="900" alt="image" src="https://github.com/user-attachments/assets/c2659346-e4df-45b9-8ef6-2e4d97a8c4ca" />
+
 
 ## Featured modes
 
